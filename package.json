@@ -1,0 +1,21 @@
+{
+  "name": "ms-sandbox",
+  "private": true,
+  "packageManager": "pnpm@11.13.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @ms-sandbox/api --filter @ms-sandbox/demo dev",
+    "dev:api": "pnpm --filter @ms-sandbox/api dev",
+    "dev:demo": "pnpm --filter @ms-sandbox/demo dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "certs": "pnpm --filter @ms-sandbox/api certs",
+    "smoke:login": "node scripts/smoke-login.mjs",
+    "test:login": "node scripts/playwright-login.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "playwright": "^1.65.1"
+  }
+}

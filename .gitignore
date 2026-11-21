@@ -22,9 +22,8 @@ dist/
 !.env.example
 
 # Runtime data (local emulator)
-data/tls/
-data/blobs/
-data/snapshots/
+data/
+!data/.gitkeep
 
 # OS / IDE
 .DS_Store

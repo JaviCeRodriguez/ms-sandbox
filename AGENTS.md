@@ -4,14 +4,15 @@ Instructions for coding agents (Cursor, and others) working in this repository.
 
 ## Current working mode (temporary)
 
-**Until a successful MSAL login against the local emulator is demonstrated**, we intentionally
-deviate from the usual `feat/*` → `develop` → `main` flow:
+**Still active** (extended by choice after MSAL login was proven). We intentionally deviate
+from the usual `feat/*` → `develop` → `main` flow:
 
 - Work and commit **directly on `main`**.
-- No feature branches / worktrees / PRs required for this validation spike.
-- Goal: prove the PRD idea end-to-end up to **auth code + PKCE login** (stage 0 skeleton as needed + stage 1 Entra minimum).
+- No feature branches / worktrees / PRs required while this mode lasts.
+- Done so far: auth code + PKCE login against the local Hono authority (Playwright-verified).
+- Current focus: **Stage 0 — platform core** (Compose/Postgres, OData/$batch, seeds/CLI, panel shell), still on `main`.
 
-When that login works, restore the normal branch/PR flow described in `CLAUDE.md` and
+When the user ends this mode, restore the normal branch/PR flow in `CLAUDE.md` and
 `.cursor/rules/branch-flow.mdc`.
 
 ## Primary source of truth
