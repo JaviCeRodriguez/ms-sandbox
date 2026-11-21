@@ -1,0 +1,75 @@
+{
+  "version": 2,
+  "skills": {
+    "incu-way-arch-assessment": {
+      "source": "incu-tech/incuway",
+      "commit": "d50248374495f3a1b7ba74d81c07ca22bb78b542",
+      "sourceType": "github",
+      "skillPath": "skills/incu-way-arch-assessment/SKILL.md",
+      "computedHash": "cae86cc2a76494bb1b11e673c274b5cf932c8389d6704075cd3de5d13719aa5c"
+    },
+    "incu-way-bugs": {
+      "source": "incu-tech/incuway",
+      "commit": "d50248374495f3a1b7ba74d81c07ca22bb78b542",
+      "sourceType": "github",
+      "skillPath": "skills/incu-way-bugs/SKILL.md",
+      "computedHash": "f3d97e1ca857f74c15eb81cd84e58fa8cf2f3a08aa44551951ca288a05ff6132"
+    },
+    "incu-way-development": {
+      "source": "incu-tech/incuway",
+      "commit": "d50248374495f3a1b7ba74d81c07ca22bb78b542",
+      "sourceType": "github",
+      "skillPath": "skills/incu-way-development/SKILL.md",
+      "computedHash": "a05d5bc4e0529e8e2422978bf8a74fc372a04df3c129bb04ad699664a5752ee7"
+    },
+    "incu-way-docs": {
+      "source": "incu-tech/incuway",
+      "commit": "d50248374495f3a1b7ba74d81c07ca22bb78b542",
+      "sourceType": "github",
+      "skillPath": "skills/incu-way-docs/SKILL.md",
+      "computedHash": "e06c8adf3ef93e48834cc0461fe1cbeabb032cc05113d4e56ab5c7df1ac7d89a"
+    },
+    "incu-way-init": {
+      "source": "incu-tech/incuway",
+      "commit": "d50248374495f3a1b7ba74d81c07ca22bb78b542",
+      "sourceType": "github",
+      "skillPath": "skills/incu-way-init/SKILL.md",
+      "computedHash": "c6f812f2dfe255e63c82f6932e3c228d9895b18941eac8714baf506377113f9d"
+    },
+    "incu-way-po": {
+      "source": "incu-tech/incuway",
+      "commit": "d50248374495f3a1b7ba74d81c07ca22bb78b542",
+      "sourceType": "github",
+      "skillPath": "skills/incu-way-po/SKILL.md",
+      "computedHash": "cd1f8838f37363287ea5799d02d884f33f4c1a09affbe84381584e8631db6e6a"
+    },
+    "incu-way-prepare-pr": {
+      "source": "incu-tech/incuway",
+      "commit": "d50248374495f3a1b7ba74d81c07ca22bb78b542",
+      "sourceType": "github",
+      "skillPath": "skills/incu-way-prepare-pr/SKILL.md",
+      "computedHash": "1ace58ccc1b4ff625c2a0fc2ea7287fe65d00175f2e1860a6a11f2bdd0558c36"
+    },
+    "incu-way-security-validation": {
+      "source": "incu-tech/incuway",
+      "commit": "d50248374495f3a1b7ba74d81c07ca22bb78b542",
+      "sourceType": "github",
+      "skillPath": "skills/incu-way-security-validation/SKILL.md",
+      "computedHash": "8d7b431059e658091e420a5f9ce1643a4b6fd34cfcc775a05010ef587aaa78d1"
+    },
+    "incu-way-threat-model": {
+      "source": "incu-tech/incuway",
+      "commit": "d50248374495f3a1b7ba74d81c07ca22bb78b542",
+      "sourceType": "github",
+      "skillPath": "skills/incu-way-threat-model/SKILL.md",
+      "computedHash": "344031b980cafb89cf60acbee3128aa9cc74f4ae110624f178ddada0d5acea33"
+    },
+    "snyk-remediation": {
+      "source": "incu-tech/incuway",
+      "commit": "d50248374495f3a1b7ba74d81c07ca22bb78b542",
+      "sourceType": "github",
+      "skillPath": "skills/snyk-remediation/SKILL.md",
+      "computedHash": "5e021db3301ac899a56ab5d7c819c887af1256b197019d6d1ce9d7835a63b3aa"
+    }
+  }
+}
