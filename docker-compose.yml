@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ms-sandbox-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mssandbox
+      POSTGRES_PASSWORD: mssandbox
+      POSTGRES_DB: mssandbox
+    # Bind localhost only — local-dev tool, not Internet-facing.
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - ms_sandbox_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mssandbox -d mssandbox"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  ms_sandbox_pg:

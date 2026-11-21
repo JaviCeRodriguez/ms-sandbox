@@ -3,6 +3,7 @@ import { createServer } from "node:https";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createTenantStore, migrate, type TenantStore } from "@ms-sandbox/core";
 import { createApp } from "./app.js";
 import { loadOrCreateSigningKeys } from "./keys.js";
 import { TENANT_ID, SPA_APP_ID } from "./seed.js";
@@ -19,8 +20,30 @@ if (!existsSync(keyPath) || !existsSync(certPath)) {
 const publicOrigin = process.env.PUBLIC_ORIGIN ?? "https://localhost:8443";
 const port = Number(process.env.PORT ?? 8443);
 
+let tenants: TenantStore | null = null;
+if (process.env.DATABASE_URL) {
+  try {
+    await migrate(process.env.DATABASE_URL);
+    tenants = createTenantStore(process.env.DATABASE_URL);
+    // Ensure Contoso exists for Stage 0 demos.
+    if (!(await tenants.get(TENANT_ID))) {
+      await tenants.create({
+        id: TENANT_ID,
+        displayName: "Contoso Ltd",
+        defaultDomain: "contoso.test",
+      });
+    }
+    console.log("Postgres ready (tenants store)");
+  } catch (err) {
+    console.warn("DATABASE_URL set but migrate/connect failed:", err);
+    tenants = null;
+  }
+} else {
+  console.warn("DATABASE_URL not set — admin tenants API returns 503; OIDC spike still works");
+}
+
 const keys = await loadOrCreateSigningKeys();
-const app = createApp(keys, publicOrigin);
+const app = createApp(keys, publicOrigin, tenants);
 
 serve(
   {

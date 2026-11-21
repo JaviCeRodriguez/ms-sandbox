@@ -1,0 +1,8 @@
+# Stage 0 platform seed — empty-ish tenants (Entra users come in Stage 1).
+tenants:
+  - id: "11111111-1111-1111-1111-111111111111"
+    displayName: "Contoso Ltd"
+    defaultDomain: contoso.test
+  - id: "22222222-2222-2222-2222-222222222222"
+    displayName: "Fabrikam"
+    defaultDomain: fabrikam.test

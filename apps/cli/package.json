@@ -1,0 +1,12 @@
+{
+  "name": "@ms-sandbox/cli",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "msim": "./src/msim.mjs"
+  },
+  "scripts": {
+    "start": "node src/msim.mjs",
+    "typecheck": "node -e \"process.exit(0)\""
+  }
+}

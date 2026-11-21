@@ -3,12 +3,16 @@
   "private": true,
   "packageManager": "pnpm@11.13.0",
   "scripts": {
-    "dev": "pnpm --parallel --filter @ms-sandbox/api --filter @ms-sandbox/demo dev",
+    "dev": "pnpm --parallel --filter @ms-sandbox/api --filter @ms-sandbox/demo --filter @ms-sandbox/panel dev",
     "dev:api": "pnpm --filter @ms-sandbox/api dev",
     "dev:demo": "pnpm --filter @ms-sandbox/demo dev",
+    "dev:panel": "pnpm --filter @ms-sandbox/panel dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "certs": "pnpm --filter @ms-sandbox/api certs",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "pnpm --filter @ms-sandbox/core migrate",
     "smoke:login": "node scripts/smoke-login.mjs",
     "test:login": "node scripts/playwright-login.mjs"
   },

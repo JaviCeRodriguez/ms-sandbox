@@ -1,8 +1,10 @@
 import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
+import type { TenantStore } from "@ms-sandbox/core";
 import type { SigningKeys } from "./keys.js";
 import { renderLoginPage } from "./login-page.js";
+import { createPlatformRoutes } from "./platform-routes.js";
 import {
   consumeAuthCode,
   createAuthCode,
@@ -20,20 +22,37 @@ import { mintTokens } from "./tokens.js";
 
 const SESSION_COOKIE = "ms_sandbox_session";
 
-export function createApp(keys: SigningKeys, publicOrigin: string) {
+export function createApp(
+  keys: SigningKeys,
+  publicOrigin: string,
+  tenants: TenantStore | null = null,
+) {
   const app = new Hono();
 
   app.use(
     "*",
     cors({
-      origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+      origin: [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+      ],
       allowHeaders: ["Content-Type", "Authorization"],
-      allowMethods: ["GET", "POST", "OPTIONS"],
+      allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
       credentials: true,
     }),
   );
 
-  app.get("/health", (c) => c.json({ ok: true, service: "ms-sandbox-api" }));
+  app.get("/health", (c) =>
+    c.json({
+      ok: true,
+      service: "ms-sandbox-api",
+      database: tenants ? "connected" : "unavailable",
+    }),
+  );
+
+  app.route("/", createPlatformRoutes({ publicOrigin, tenants }));
 
   app.get("/:tenantId/v2.0/.well-known/openid-configuration", (c) => {
     const tenantId = c.req.param("tenantId");

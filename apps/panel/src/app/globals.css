@@ -1,0 +1,97 @@
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  line-height: 1.45;
+  --bg: #f4f7fb;
+  --ink: #102a43;
+  --muted: #627d98;
+  --card: #ffffff;
+  --line: #d9e2ec;
+  --accent: #0f4c81;
+  --warn: #fff3cd;
+  --warn-ink: #664d03;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #d9e2ec 0%, var(--bg) 180px);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+.banner {
+  background: var(--warn);
+  color: var(--warn-ink);
+  border-bottom: 1px solid #ffecb5;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+}
+
+.header nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.header a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.main {
+  width: min(920px, 94vw);
+  margin: 0 auto 2rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 10px 30px rgba(16, 42, 67, 0.08);
+}
+
+h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.4rem;
+}
+
+.sub {
+  margin: 0 0 1rem;
+  color: var(--muted);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.55rem 0.35rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.95rem;
+}
+
+.error {
+  color: #b42318;
+  background: #fef3f2;
+  border: 1px solid #fecdca;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+code {
+  background: #f0f4f8;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}

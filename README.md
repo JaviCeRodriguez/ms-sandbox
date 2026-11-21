@@ -24,13 +24,20 @@ mkcert -install
 
 ```bash
 pnpm install
-pnpm certs    # si faltan data/tls/*.pem
-pnpm dev      # API :8443 + demo :5173
+pnpm certs              # si faltan data/tls/*.pem
+cp .env.example .env    # opcional
+pnpm db:up              # Postgres en 127.0.0.1:5432
+# en .env: DATABASE_URL=postgres://mssandbox:mssandbox@127.0.0.1:5432/mssandbox
+pnpm db:migrate
+pnpm dev                # API :8443 + demo :5173 + panel :3000
 ```
 
-- Demo: http://localhost:5173  
+- Demo MSAL: http://localhost:5173  
+- Panel Stage 0: http://localhost:3000  
 - Authority: `https://localhost:8443/11111111-1111-1111-1111-111111111111`  
 - Usuario: `alice@contoso.test` / `Password1!`
+
+CLI stub: `pnpm --filter @ms-sandbox/cli start -- up|down|migrate|health`
 
 ### Docs
 
