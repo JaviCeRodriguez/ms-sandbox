@@ -84,8 +84,10 @@ switch (cmd) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(doc),
       });
+    } else if (sub === "export") {
+      await api("/admin/v1/seeds:export");
     } else {
-      console.error("Usage: msim seed apply [file]");
+      console.error("Usage: msim seed apply|export [file]");
       process.exit(1);
     }
     break;

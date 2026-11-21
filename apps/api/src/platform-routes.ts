@@ -9,6 +9,8 @@ import {
 } from "@ms-sandbox/odata";
 import {
   applyTenantSeed,
+  getMetrics,
+  type DirectoryStore,
   type FaultStore,
   type RequestLogStore,
   type SnapshotStore,
@@ -31,6 +33,7 @@ export function createPlatformRoutes(opts: {
   requests: RequestLogStore | null;
   faults: FaultStore | null;
   snapshots: SnapshotStore | null;
+  directory: DirectoryStore | null;
 }) {
   const app = new Hono();
 
@@ -132,6 +135,20 @@ export function createPlatformRoutes(opts: {
     return c.json(result);
   });
 
+  app.get("/admin/v1/seeds:export", async (c) => {
+    if (!opts.tenants) return c.json(needDb(), 503);
+    const tenants = await opts.tenants.list();
+    return c.json({
+      tenants: tenants.map((t) => ({
+        id: t.id,
+        displayName: t.displayName,
+        defaultDomain: t.defaultDomain,
+      })),
+    });
+  });
+
+  app.get("/admin/v1/metrics", (c) => c.json(getMetrics()));
+
   app.get("/admin/v1/snapshots", async (c) => {
     if (!opts.snapshots) return c.json(needDb(), 503);
     return c.json({ value: await opts.snapshots.list() });
@@ -150,7 +167,12 @@ export function createPlatformRoutes(opts: {
     const body = (await c.req.json()) as { name?: string };
     if (!body.name) return c.json({ error: "name is required" }, 400);
     try {
-      const restored = await opts.snapshots.restore(body.name, opts.tenants, opts.faults);
+      const restored = await opts.snapshots.restore(
+        body.name,
+        opts.tenants,
+        opts.faults,
+        opts.directory,
+      );
       return c.json({ ok: true, name: restored.name, tenants: restored.tenants.length });
     } catch (err) {
       return c.json({ error: err instanceof Error ? err.message : "restore failed" }, 404);
@@ -159,8 +181,11 @@ export function createPlatformRoutes(opts: {
 
   app.post("/admin/v1/reset", async (c) => {
     if (!opts.snapshots || !opts.tenants || !opts.faults) return c.json(needDb(), 503);
-    await opts.snapshots.resetPlatform(opts.tenants, opts.faults, { reseed: true });
-    return c.json({ ok: true, reseeded: "Contoso Ltd" });
+    await opts.snapshots.resetPlatform(opts.tenants, opts.faults, {
+      reseed: true,
+      directory: opts.directory,
+    });
+    return c.json({ ok: true, reseeded: "Contoso Ltd + directory demo" });
   });
 
   app.get("/v1.0/devPlaceholder", (c) => {

@@ -1,0 +1,87 @@
+openapi: 3.0.3
+info:
+  title: ms-sandbox Graph subset
+  version: 0.1.0
+  description: Trimmed OpenAPI for local emulator stages (grows per stage).
+servers:
+  - url: https://localhost:8443
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /v1.0/devPlaceholder:
+    get:
+      summary: Stage 0 OData playground (not a real Graph resource)
+      parameters:
+        - $ref: "#/components/parameters/select"
+        - $ref: "#/components/parameters/filter"
+        - $ref: "#/components/parameters/top"
+        - $ref: "#/components/parameters/orderby"
+        - $ref: "#/components/parameters/count"
+      responses:
+        "200":
+          description: OData collection
+  /v1.0/me:
+    get:
+      summary: Signed-in user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User
+        "401":
+          description: Invalid token
+        "403":
+          description: Missing scope
+  /v1.0/users:
+    get:
+      summary: List users
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User collection
+  /v1.0/groups:
+    get:
+      summary: List groups
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Group collection
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    select:
+      name: $select
+      in: query
+      schema:
+        type: string
+    filter:
+      name: $filter
+      in: query
+      schema:
+        type: string
+    top:
+      name: $top
+      in: query
+      schema:
+        type: integer
+    orderby:
+      name: $orderby
+      in: query
+      schema:
+        type: string
+    count:
+      name: $count
+      in: query
+      schema:
+        type: string
+        enum: ["true", "false"]

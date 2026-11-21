@@ -9,8 +9,8 @@ from the usual `feat/*` → `develop` → `main` flow:
 
 - Work and commit **directly on `main`**.
 - No feature branches / worktrees / PRs required while this mode lasts.
-- Done so far: auth code + PKCE login against the local Hono authority (Playwright-verified).
-- Current focus: **Stage 0 — platform core** (Compose/Postgres, OData/$batch, seeds/CLI, panel shell), still on `main`.
+- Done so far: Stage 0 platform + Stage 1 Entra minimum (MSAL PKCE, client credentials, device code, refresh, Graph `/me`/`/users`/`/groups`, consent/mint), Playwright-verified.
+- Current focus: continue product stages on `main` until temporary mode ends.
 
 When the user ends this mode, restore the normal branch/PR flow in `CLAUDE.md` and
 `.cursor/rules/branch-flow.mdc`.

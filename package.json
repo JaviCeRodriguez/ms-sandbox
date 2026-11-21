@@ -14,6 +14,8 @@
     "db:down": "docker compose down",
     "db:migrate": "pnpm --filter @ms-sandbox/core migrate",
     "smoke:login": "node scripts/smoke-login.mjs",
+    "smoke:stage0": "node scripts/smoke-stage0.mjs",
+    "smoke:stage1": "node scripts/smoke-stage1.mjs",
     "test:login": "node scripts/playwright-login.mjs"
   },
   "engines": {

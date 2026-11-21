@@ -4,11 +4,13 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  createDirectoryStore,
   createFaultStore,
   createRequestLogStore,
   createSnapshotStore,
   createTenantStore,
   migrate,
+  type DirectoryStore,
   type FaultStore,
   type RequestLogStore,
   type SnapshotStore,
@@ -16,7 +18,9 @@ import {
 } from "@ms-sandbox/core";
 import { createApp } from "./app.js";
 import { loadOrCreateSigningKeys } from "./keys.js";
-import { TENANT_ID, SPA_APP_ID } from "./seed.js";
+
+const TENANT_ID = "11111111-1111-1111-1111-111111111111";
+const SPA_APP_ID = "cccccccc-cccc-cccc-cccc-ccccccccccc1";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const keyPath = join(root, "data/tls/localhost-key.pem");
@@ -35,6 +39,7 @@ let tenants: TenantStore | null = null;
 let requests: RequestLogStore | null = null;
 let faults: FaultStore | null = null;
 let snapshots: SnapshotStore | null = null;
+let directory: DirectoryStore | null = null;
 
 if (process.env.DATABASE_URL) {
   try {
@@ -44,27 +49,18 @@ if (process.env.DATABASE_URL) {
     requests = createRequestLogStore(process.env.DATABASE_URL);
     faults = createFaultStore(process.env.DATABASE_URL);
     snapshots = createSnapshotStore(snapshotsDir, process.env.DATABASE_URL);
-    if (!(await tenants.get(TENANT_ID))) {
-      await tenants.create({
-        id: TENANT_ID,
-        displayName: "Contoso Ltd",
-        defaultDomain: "contoso.test",
-      });
-    }
-    console.log("Postgres ready (tenants + requests + faults + snapshots)");
+    directory = createDirectoryStore(process.env.DATABASE_URL);
+    await directory.ensureContosoDemo();
+    console.log("Postgres ready (platform + Entra directory)");
   } catch (err) {
     console.warn("DATABASE_URL set but migrate/connect failed:", err);
-    tenants = null;
-    requests = null;
-    faults = null;
-    snapshots = null;
   }
 } else {
-  console.warn("DATABASE_URL not set — admin platform APIs return 503; OIDC spike still works");
+  console.warn("DATABASE_URL not set — set it for Stage 0/1 features");
 }
 
 const keys = await loadOrCreateSigningKeys();
-const app = createApp(keys, publicOrigin, { tenants, requests, faults, snapshots });
+const app = createApp(keys, publicOrigin, { tenants, requests, faults, snapshots, directory });
 
 serve(
   {
@@ -80,7 +76,8 @@ serve(
     console.log(`ms-sandbox API listening on https://localhost:${info.port}`);
     console.log(`authority: ${publicOrigin}/${TENANT_ID}`);
     console.log(`panel admin: admin@local / Password1!`);
-    console.log(`demo clientId: ${SPA_APP_ID}`);
-    console.log(`login: alice@contoso.test / Password1!`);
+    console.log(`SPA clientId: ${SPA_APP_ID}`);
+    console.log(`daemon: dddddddd-dddd-dddd-dddd-ddddddddddd1 / DaemonSecret1!`);
+    console.log(`user login: alice@contoso.test / Password1!`);
   },
 );

@@ -6,6 +6,7 @@ import { getDb } from "./db.js";
 import type { TenantStore } from "./tenants.js";
 import { applyTenantSeed } from "./seeds.js";
 import type { FaultStore } from "./faults.js";
+import type { DirectoryStore } from "./directory.js";
 
 export type SnapshotMeta = {
   id: string;
@@ -97,14 +98,18 @@ export class SnapshotStore {
     name: string,
     tenants: TenantStore,
     faults: FaultStore,
+    directory?: DirectoryStore | null,
   ): Promise<SnapshotPayload> {
     const filePath = join(this.snapshotsDir, `${name}.json`);
     if (!existsSync(filePath)) {
       throw new Error(`Snapshot not found: ${name}`);
     }
     const payload = JSON.parse(readFileSync(filePath, "utf8")) as SnapshotPayload;
-    await this.resetPlatform(tenants, faults, { reseed: false });
+    await this.resetPlatform(tenants, faults, { reseed: false, directory: null });
     await applyTenantSeed(tenants, { tenants: payload.tenants });
+    if (directory) {
+      await directory.ensureContosoDemo();
+    }
     for (const f of payload.faults) {
       if (!f.active) continue;
       await faults.create({
@@ -118,11 +123,15 @@ export class SnapshotStore {
     return payload;
   }
 
-  /** Clears tenants, faults, request logs. Optionally reseed Contoso. */
+  /** Clears tenants, faults, request logs. Optionally reseed Contoso + directory demo. */
   async resetPlatform(
     tenants: TenantStore,
     faults: FaultStore,
-    opts: { reseed?: boolean; contoso?: { id: string; displayName: string; defaultDomain: string } } = {},
+    opts: {
+      reseed?: boolean;
+      contoso?: { id: string; displayName: string; defaultDomain: string };
+      directory?: DirectoryStore | null;
+    } = {},
   ): Promise<void> {
     await this.sql`delete from request_logs`;
     await this.sql`delete from fault_rules`;
@@ -135,8 +144,10 @@ export class SnapshotStore {
         defaultDomain: "contoso.test",
       };
       await applyTenantSeed(tenants, { tenants: [contoso] });
+      if (opts.directory) {
+        await opts.directory.ensureContosoDemo();
+      }
     }
-    // silence unused
     void faults;
   }
 

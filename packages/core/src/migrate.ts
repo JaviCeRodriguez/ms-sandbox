@@ -50,4 +50,103 @@ export async function migrate(databaseUrl?: string): Promise<void> {
       created_at timestamptz not null default now()
     )
   `;
+
+  // --- Stage 1 directory ---
+  await sql`
+    create table if not exists directory_users (
+      id uuid primary key,
+      tenant_id uuid not null references tenants(id) on delete cascade,
+      user_principal_name text not null,
+      display_name text not null,
+      password_hash text not null,
+      job_title text,
+      department text,
+      account_enabled boolean not null default true,
+      created_at timestamptz not null default now(),
+      unique (tenant_id, user_principal_name)
+    )
+  `;
+  await sql`
+    create table if not exists directory_groups (
+      id uuid primary key,
+      tenant_id uuid not null references tenants(id) on delete cascade,
+      display_name text not null,
+      mail_nickname text,
+      security_enabled boolean not null default true,
+      created_at timestamptz not null default now()
+    )
+  `;
+  await sql`
+    create table if not exists directory_group_members (
+      group_id uuid not null references directory_groups(id) on delete cascade,
+      user_id uuid not null references directory_users(id) on delete cascade,
+      primary key (group_id, user_id)
+    )
+  `;
+  await sql`
+    create table if not exists directory_applications (
+      app_id uuid primary key,
+      tenant_id uuid not null references tenants(id) on delete cascade,
+      display_name text not null,
+      public_client boolean not null default true,
+      client_secret_hash text,
+      created_at timestamptz not null default now()
+    )
+  `;
+  await sql`
+    create table if not exists directory_redirect_uris (
+      app_id uuid not null references directory_applications(app_id) on delete cascade,
+      redirect_uri text not null,
+      primary key (app_id, redirect_uri)
+    )
+  `;
+  await sql`
+    create table if not exists directory_app_roles (
+      id uuid primary key,
+      app_id uuid not null references directory_applications(app_id) on delete cascade,
+      value text not null,
+      display_name text not null
+    )
+  `;
+  await sql`
+    create table if not exists directory_app_role_assignments (
+      id uuid primary key,
+      app_id uuid not null references directory_applications(app_id) on delete cascade,
+      role_value text not null
+    )
+  `;
+  await sql`
+    create table if not exists directory_oauth2_grants (
+      id uuid primary key,
+      tenant_id uuid not null references tenants(id) on delete cascade,
+      app_id uuid not null references directory_applications(app_id) on delete cascade,
+      principal_upn text not null,
+      scopes text not null,
+      unique (tenant_id, app_id, principal_upn)
+    )
+  `;
+  await sql`
+    create table if not exists directory_refresh_tokens (
+      id text primary key,
+      tenant_id uuid not null,
+      client_id uuid not null,
+      user_id uuid,
+      scopes text not null,
+      expires_at timestamptz not null,
+      family_id text not null,
+      revoked boolean not null default false
+    )
+  `;
+  await sql`
+    create table if not exists directory_device_codes (
+      device_code text primary key,
+      user_code text not null unique,
+      tenant_id uuid not null,
+      client_id uuid not null,
+      scopes text not null,
+      expires_at timestamptz not null,
+      approved_user_id uuid,
+      interval_seconds int not null default 5
+    )
+  `;
 }

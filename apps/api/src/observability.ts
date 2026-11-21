@@ -1,6 +1,6 @@
 import { createMiddleware } from "hono/factory";
 import { graphError } from "@ms-sandbox/odata";
-import type { FaultStore, RequestLogStore } from "@ms-sandbox/core";
+import { recordLatency, type FaultStore, type RequestLogStore } from "@ms-sandbox/core";
 
 /** Request inspector + fault injection (Stage 0). */
 export function observabilityMiddleware(opts: {
@@ -22,12 +22,14 @@ export function observabilityMiddleware(opts: {
           fault.status === 429 ? "activityLimitReached" : "UnknownError",
           `Injected fault ${fault.status} for ${path}`,
         );
+        const durationMs = Date.now() - started;
+        recordLatency(durationMs);
         if (opts.requests) {
           await opts.requests.append({
             method,
             path,
             status: fault.status,
-            durationMs: Date.now() - started,
+            durationMs,
           });
         }
         return new Response(JSON.stringify(body), {
@@ -39,12 +41,14 @@ export function observabilityMiddleware(opts: {
 
     await next();
 
+    const durationMs = Date.now() - started;
+    recordLatency(durationMs);
     if (opts.requests) {
       await opts.requests.append({
         method,
         path,
         status: c.res.status,
-        durationMs: Date.now() - started,
+        durationMs,
       });
     }
   });

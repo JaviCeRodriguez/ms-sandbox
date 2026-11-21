@@ -1,0 +1,8 @@
+{
+  "name": "@ms-sandbox/contracts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./openapi/v1.0-subset.yaml": "./openapi/v1.0-subset.yaml"
+  }
+}

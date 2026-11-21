@@ -4,9 +4,15 @@ Emulador local de Microsoft Entra ID / Graph para desarrollo (spike).
 
 **No es un producto de Microsoft.** Solo uso local — no ingresar cuentas ni secretos reales.
 
-## Spike actual: login MSAL
+## Estado
 
-Hasta demostrar un login exitoso se trabaja directo en `main` (ver `AGENTS.md`).
+Modo temporal en `main` (ver `AGENTS.md`): **Stage 0 + Stage 1** implementados.
+
+```bash
+pnpm smoke:stage0
+pnpm smoke:stage1
+pnpm test:login
+```
 
 ### Prerrequisitos
 
