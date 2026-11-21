@@ -40,7 +40,11 @@ importers:
         specifier: ^5.9.0
         version: 5.9.3
 
-  apps/cli: {}
+  apps/cli:
+    dependencies:
+      yaml:
+        specifier: ^2.9.1
+        version: 2.9.1
 
   apps/demo:
     dependencies:
@@ -53,7 +57,7 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^6.3.0
-        version: 6.4.6(@types/node@22.20.5)(tsx@4.23.15)
+        version: 6.4.6(@types/node@22.20.5)(tsx@4.23.15)(yaml@2.9.1)
 
   apps/panel:
     dependencies:
@@ -85,6 +89,9 @@ importers:
       postgres:
         specifier: ^3.4.7
         version: 3.4.9
+      yaml:
+        specifier: ^2.9.1
+        version: 2.9.1
     devDependencies:
       '@types/node':
         specifier: ^22.15.0
@@ -1017,6 +1024,11 @@ packages:
       yaml:
         optional: true
 
+  yaml@2.9.1:
+    resolution: {integrity: sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
 snapshots:
 
   '@azure/msal-browser@4.30.0':
@@ -1649,7 +1661,7 @@ snapshots:
 
   undici-types@6.21.0: {}
 
-  vite@6.4.6(@types/node@22.20.5)(tsx@4.23.15):
+  vite@6.4.6(@types/node@22.20.5)(tsx@4.23.15)(yaml@2.9.1):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.7)
@@ -1661,3 +1673,6 @@ snapshots:
       '@types/node': 22.20.5
       fsevents: 2.3.3
       tsx: 4.23.15
+      yaml: 2.9.1
+
+  yaml@2.9.1: {}

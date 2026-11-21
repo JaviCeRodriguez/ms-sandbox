@@ -1,9 +1,10 @@
 import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
-import type { TenantStore } from "@ms-sandbox/core";
+import type { FaultStore, RequestLogStore, TenantStore } from "@ms-sandbox/core";
 import type { SigningKeys } from "./keys.js";
 import { renderLoginPage } from "./login-page.js";
+import { observabilityMiddleware } from "./observability.js";
 import { createPlatformRoutes } from "./platform-routes.js";
 import {
   consumeAuthCode,
@@ -25,7 +26,11 @@ const SESSION_COOKIE = "ms_sandbox_session";
 export function createApp(
   keys: SigningKeys,
   publicOrigin: string,
-  tenants: TenantStore | null = null,
+  platform: {
+    tenants: TenantStore | null;
+    requests: RequestLogStore | null;
+    faults: FaultStore | null;
+  } = { tenants: null, requests: null, faults: null },
 ) {
   const app = new Hono();
 
@@ -44,15 +49,25 @@ export function createApp(
     }),
   );
 
+  app.use("*", observabilityMiddleware(platform));
+
   app.get("/health", (c) =>
     c.json({
       ok: true,
       service: "ms-sandbox-api",
-      database: tenants ? "connected" : "unavailable",
+      database: platform.tenants ? "connected" : "unavailable",
     }),
   );
 
-  app.route("/", createPlatformRoutes({ publicOrigin, tenants }));
+  app.route(
+    "/",
+    createPlatformRoutes({
+      publicOrigin,
+      tenants: platform.tenants,
+      requests: platform.requests,
+      faults: platform.faults,
+    }),
+  );
 
   app.get("/:tenantId/v2.0/.well-known/openid-configuration", (c) => {
     const tenantId = c.req.param("tenantId");

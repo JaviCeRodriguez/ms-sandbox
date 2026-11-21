@@ -17,6 +17,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <strong>ms-sandbox</strong>
           <nav>
             <a href="/">Tenants</a>
+            <a href="/requests">Inspector</a>
+            <a href="/faults">Faults</a>
             <a href="/health">Health</a>
           </nav>
         </header>

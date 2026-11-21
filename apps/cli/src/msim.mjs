@@ -1,13 +1,16 @@
 #!/usr/bin/env node
 /**
- * msim — Stage 0 CLI stub (Compose + migrate + health).
+ * msim — Stage 0 CLI (Compose, migrate, seed, faults, health).
  */
 import { spawnSync } from "node:child_process";
-import { dirname, join } from "node:path";
+import { readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parse as parseYaml } from "yaml";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../../..");
-const [cmd, ...args] = process.argv.slice(2);
+const API = process.env.MSIM_API_ORIGIN ?? "https://localhost:8443";
+const [cmd, sub, ...args] = process.argv.slice(2);
 
 function run(command, commandArgs, opts = {}) {
   const result = spawnSync(command, commandArgs, {
@@ -17,6 +20,23 @@ function run(command, commandArgs, opts = {}) {
     ...opts,
   });
   process.exit(result.status ?? 1);
+}
+
+async function api(path, init) {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+  const res = await fetch(`${API}${path}`, init);
+  const text = await res.text();
+  let body;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    body = text;
+  }
+  if (!res.ok) {
+    console.error(res.status, body);
+    process.exit(1);
+  }
+  console.log(JSON.stringify(body, null, 2));
 }
 
 switch (cmd) {
@@ -29,22 +49,59 @@ switch (cmd) {
   case "migrate":
     run("pnpm", ["--filter", "@ms-sandbox/core", "migrate"]);
     break;
-  case "health": {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-    const res = await fetch("https://localhost:8443/health");
-    console.log(await res.json());
+  case "health":
+    await api("/health");
     break;
-  }
+  case "seed":
+    if (sub === "apply") {
+      const file = args[0] ?? "seeds/tenants.yaml";
+      const doc = parseYaml(readFileSync(resolve(root, file), "utf8"));
+      await api("/admin/v1/seeds:apply", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(doc),
+      });
+    } else {
+      console.error("Usage: msim seed apply [file]");
+      process.exit(1);
+    }
+    break;
+  case "faults":
+    if (sub === "set") {
+      // msim faults set --path '/v1.0/devPlaceholder' --status 429
+      const pathIdx = args.indexOf("--path");
+      const statusIdx = args.indexOf("--status");
+      const pathGlob = pathIdx >= 0 ? args[pathIdx + 1] : null;
+      const status = statusIdx >= 0 ? Number(args[statusIdx + 1]) : null;
+      if (!pathGlob || !status) {
+        console.error("Usage: msim faults set --path <glob> --status <code>");
+        process.exit(1);
+      }
+      await api("/admin/v1/faults", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          pathGlob,
+          status,
+          retryAfter: status === 429 ? 1 : null,
+          oneShot: true,
+        }),
+      });
+    } else if (sub === "list" || !sub) {
+      await api("/admin/v1/faults");
+    } else {
+      console.error("Usage: msim faults set|list");
+      process.exit(1);
+    }
+    break;
   case "help":
   case undefined:
-    console.log(`msim (Stage 0 stub)
+    console.log(`msim (Stage 0)
 
-  msim up          docker compose up -d
-  msim down        docker compose down
-  msim migrate     run Postgres migrations
-  msim health      GET /health on local API
-
-More seed/snapshot/fault commands land as Stage 0 progresses.`);
+  msim up / down / migrate / health
+  msim seed apply [seeds/tenants.yaml]
+  msim faults set --path '/v1.0/devPlaceholder' --status 429
+  msim faults list`);
     break;
   default:
     console.error(`Unknown command: ${cmd}`);

@@ -1,4 +1,10 @@
 export type { TenantRecord } from "./tenants.js";
 export { TenantStore, createTenantStore } from "./tenants.js";
+export type { RequestLogRecord } from "./requests.js";
+export { RequestLogStore, createRequestLogStore } from "./requests.js";
+export type { FaultRule } from "./faults.js";
+export { FaultStore, createFaultStore, matchGlob } from "./faults.js";
+export type { TenantSeedDoc } from "./seeds.js";
+export { applyTenantSeed } from "./seeds.js";
 export { getDb, type Sql } from "./db.js";
 export { migrate } from "./migrate.js";

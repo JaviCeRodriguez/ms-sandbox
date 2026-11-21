@@ -6,12 +6,20 @@ import {
   parseODataQuery,
   type BatchRequest,
 } from "@ms-sandbox/odata";
-import type { TenantStore } from "@ms-sandbox/core";
+import {
+  applyTenantSeed,
+  type FaultStore,
+  type RequestLogStore,
+  type TenantSeedDoc,
+  type TenantStore,
+} from "@ms-sandbox/core";
 
-/** Stage 0 platform routes: admin tenants, OData placeholder, $batch. */
+/** Stage 0 platform routes: admin tenants, inspector, faults, OData placeholder, $batch. */
 export function createPlatformRoutes(opts: {
   publicOrigin: string;
   tenants: TenantStore | null;
+  requests: RequestLogStore | null;
+  faults: FaultStore | null;
 }) {
   const app = new Hono();
 
@@ -21,25 +29,22 @@ export function createPlatformRoutes(opts: {
     { id: "p3", name: "gamma", rank: 3 },
   ];
 
+  const needDb = () =>
+    ({ error: "database_unavailable", message: "Set DATABASE_URL and run migrate" }) as const;
+
   app.get("/admin/v1/tenants", async (c) => {
-    if (!opts.tenants) {
-      return c.json({ error: "database_unavailable", message: "Set DATABASE_URL and run migrate" }, 503);
-    }
+    if (!opts.tenants) return c.json(needDb(), 503);
     return c.json({ value: await opts.tenants.list() });
   });
 
   app.post("/admin/v1/tenants", async (c) => {
-    if (!opts.tenants) {
-      return c.json({ error: "database_unavailable" }, 503);
-    }
+    if (!opts.tenants) return c.json(needDb(), 503);
     const body = (await c.req.json()) as {
       id?: string;
       displayName?: string;
       defaultDomain?: string | null;
     };
-    if (!body.displayName) {
-      return c.json({ error: "displayName is required" }, 400);
-    }
+    if (!body.displayName) return c.json({ error: "displayName is required" }, 400);
     const created = await opts.tenants.create({
       id: body.id,
       displayName: body.displayName,
@@ -49,20 +54,59 @@ export function createPlatformRoutes(opts: {
   });
 
   app.patch("/admin/v1/tenants/:id", async (c) => {
-    if (!opts.tenants) return c.json({ error: "database_unavailable" }, 503);
+    if (!opts.tenants) return c.json(needDb(), 503);
     const updated = await opts.tenants.update(c.req.param("id"), await c.req.json());
     if (!updated) return c.json({ error: "not_found" }, 404);
     return c.json(updated);
   });
 
   app.delete("/admin/v1/tenants/:id", async (c) => {
-    if (!opts.tenants) return c.json({ error: "database_unavailable" }, 503);
+    if (!opts.tenants) return c.json(needDb(), 503);
     const ok = await opts.tenants.remove(c.req.param("id"));
     if (!ok) return c.json({ error: "not_found" }, 404);
     return c.body(null, 204);
   });
 
-  // Internal OData playground — not a real Graph path; Stage 0 acceptance.
+  app.get("/admin/v1/requests", async (c) => {
+    if (!opts.requests) return c.json(needDb(), 503);
+    const limit = Number(c.req.query("top") ?? 50);
+    return c.json({ value: await opts.requests.list(Number.isFinite(limit) ? limit : 50) });
+  });
+
+  app.get("/admin/v1/faults", async (c) => {
+    if (!opts.faults) return c.json(needDb(), 503);
+    return c.json({ value: await opts.faults.list() });
+  });
+
+  app.post("/admin/v1/faults", async (c) => {
+    if (!opts.faults) return c.json(needDb(), 503);
+    const body = (await c.req.json()) as {
+      pathGlob?: string;
+      method?: string | null;
+      status?: number;
+      retryAfter?: number | null;
+      oneShot?: boolean;
+    };
+    if (!body.pathGlob || !body.status) {
+      return c.json({ error: "pathGlob and status are required" }, 400);
+    }
+    const created = await opts.faults.create({
+      pathGlob: body.pathGlob,
+      method: body.method,
+      status: body.status,
+      retryAfter: body.retryAfter,
+      oneShot: body.oneShot,
+    });
+    return c.json(created, 201);
+  });
+
+  app.post("/admin/v1/seeds:apply", async (c) => {
+    if (!opts.tenants) return c.json(needDb(), 503);
+    const body = (await c.req.json()) as TenantSeedDoc;
+    const result = await applyTenantSeed(opts.tenants, body);
+    return c.json(result);
+  });
+
   app.get("/v1.0/devPlaceholder", (c) => {
     const url = new URL(c.req.url);
     const query = parseODataQuery(url.searchParams);
@@ -73,7 +117,10 @@ export function createPlatformRoutes(opts: {
     return c.json(body);
   });
 
-  const runBatch = async (c: { req: { json: () => Promise<unknown> }; json: (b: unknown, s?: number) => Response }) => {
+  const runBatch = async (c: {
+    req: { json: () => Promise<unknown> };
+    json: (b: unknown, s?: number) => Response;
+  }) => {
     const payload = (await c.req.json()) as { requests?: BatchRequest[] };
     try {
       const result = await handleJsonBatch(payload.requests, async (req) => {
