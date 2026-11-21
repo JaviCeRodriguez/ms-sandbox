@@ -37,7 +37,16 @@ pnpm dev                # API :8443 + demo :5173 + panel :3000
 - Authority: `https://localhost:8443/11111111-1111-1111-1111-111111111111`  
 - Usuario: `alice@contoso.test` / `Password1!`
 
-CLI stub: `pnpm --filter @ms-sandbox/cli start -- up|down|migrate|health`
+CLI: `pnpm --filter @ms-sandbox/cli start -- <cmd>`
+
+```text
+up | down | migrate | health | reset
+seed apply [seeds/tenants.yaml]
+faults set --path '/v1.0/devPlaceholder' --status 429
+snapshot save|restore|list <name>
+```
+
+Panel admin: `admin@local` / `Password1!` (http://localhost:3000/login)
 
 ### Docs
 

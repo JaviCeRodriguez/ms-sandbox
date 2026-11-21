@@ -1,3 +1,5 @@
+import { fetchAdmin } from "@/lib/api";
+
 type RequestLog = {
   id: string;
   method: string;
@@ -7,19 +9,13 @@ type RequestLog = {
   createdAt: string;
 };
 
-const API = process.env.NEXT_PUBLIC_API_ORIGIN ?? "https://localhost:8443";
-
 export default async function RequestsPage() {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED ??= "0";
+  const res = await fetchAdmin("/admin/v1/requests?top=30");
   let rows: RequestLog[] = [];
   let error: string | null = null;
-  try {
-    const res = await fetch(`${API}/admin/v1/requests?top=30`, { cache: "no-store" });
-    if (!res.ok) error = `${res.status}: ${await res.text()}`;
-    else rows = ((await res.json()) as { value: RequestLog[] }).value;
-  } catch (err) {
-    error = err instanceof Error ? err.message : String(err);
-  }
+  if (res.status === 401) error = "No autenticado. Andá a /login.";
+  else if (!res.ok) error = `${res.status}: ${await res.text()}`;
+  else rows = ((await res.json()) as { value: RequestLog[] }).value;
 
   return (
     <>

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { getCookie } from "hono/cookie";
 import {
   applyOData,
   graphError,
@@ -10,9 +11,18 @@ import {
   applyTenantSeed,
   type FaultStore,
   type RequestLogStore,
+  type SnapshotStore,
   type TenantSeedDoc,
   type TenantStore,
 } from "@ms-sandbox/core";
+import {
+  ADMIN_COOKIE,
+  clearAdminCookie,
+  destroyAdminSession,
+  getAdminCredentials,
+  setAdminCookie,
+  tryLogin,
+} from "./admin-auth.js";
 
 /** Stage 0 platform routes: admin tenants, inspector, faults, OData placeholder, $batch. */
 export function createPlatformRoutes(opts: {
@@ -20,6 +30,7 @@ export function createPlatformRoutes(opts: {
   tenants: TenantStore | null;
   requests: RequestLogStore | null;
   faults: FaultStore | null;
+  snapshots: SnapshotStore | null;
 }) {
   const app = new Hono();
 
@@ -31,6 +42,20 @@ export function createPlatformRoutes(opts: {
 
   const needDb = () =>
     ({ error: "database_unavailable", message: "Set DATABASE_URL and run migrate" }) as const;
+
+  app.post("/admin/v1/login", async (c) => {
+    const body = (await c.req.json()) as { username?: string; password?: string };
+    const sessionId = tryLogin(body.username ?? "", body.password ?? "");
+    if (!sessionId) return c.json({ error: "invalid_credentials" }, 401);
+    setAdminCookie(c, sessionId);
+    return c.json({ ok: true, token: sessionId, user: getAdminCredentials().user });
+  });
+
+  app.post("/admin/v1/logout", async (c) => {
+    destroyAdminSession(getCookie(c, ADMIN_COOKIE));
+    clearAdminCookie(c);
+    return c.json({ ok: true });
+  });
 
   app.get("/admin/v1/tenants", async (c) => {
     if (!opts.tenants) return c.json(needDb(), 503);
@@ -105,6 +130,37 @@ export function createPlatformRoutes(opts: {
     const body = (await c.req.json()) as TenantSeedDoc;
     const result = await applyTenantSeed(opts.tenants, body);
     return c.json(result);
+  });
+
+  app.get("/admin/v1/snapshots", async (c) => {
+    if (!opts.snapshots) return c.json(needDb(), 503);
+    return c.json({ value: await opts.snapshots.list() });
+  });
+
+  app.post("/admin/v1/snapshots:save", async (c) => {
+    if (!opts.snapshots || !opts.tenants || !opts.faults) return c.json(needDb(), 503);
+    const body = (await c.req.json()) as { name?: string };
+    if (!body.name) return c.json({ error: "name is required" }, 400);
+    const saved = await opts.snapshots.save(body.name, opts.tenants, opts.faults);
+    return c.json(saved, 201);
+  });
+
+  app.post("/admin/v1/snapshots:restore", async (c) => {
+    if (!opts.snapshots || !opts.tenants || !opts.faults) return c.json(needDb(), 503);
+    const body = (await c.req.json()) as { name?: string };
+    if (!body.name) return c.json({ error: "name is required" }, 400);
+    try {
+      const restored = await opts.snapshots.restore(body.name, opts.tenants, opts.faults);
+      return c.json({ ok: true, name: restored.name, tenants: restored.tenants.length });
+    } catch (err) {
+      return c.json({ error: err instanceof Error ? err.message : "restore failed" }, 404);
+    }
+  });
+
+  app.post("/admin/v1/reset", async (c) => {
+    if (!opts.snapshots || !opts.tenants || !opts.faults) return c.json(needDb(), 503);
+    await opts.snapshots.resetPlatform(opts.tenants, opts.faults, { reseed: true });
+    return c.json({ ok: true, reseeded: "Contoso Ltd" });
   });
 
   app.get("/v1.0/devPlaceholder", (c) => {

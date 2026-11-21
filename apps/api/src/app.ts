@@ -1,7 +1,13 @@
 import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
-import type { FaultStore, RequestLogStore, TenantStore } from "@ms-sandbox/core";
+import type {
+  FaultStore,
+  RequestLogStore,
+  SnapshotStore,
+  TenantStore,
+} from "@ms-sandbox/core";
+import { adminAuthMiddleware } from "./admin-auth.js";
 import type { SigningKeys } from "./keys.js";
 import { renderLoginPage } from "./login-page.js";
 import { observabilityMiddleware } from "./observability.js";
@@ -30,7 +36,8 @@ export function createApp(
     tenants: TenantStore | null;
     requests: RequestLogStore | null;
     faults: FaultStore | null;
-  } = { tenants: null, requests: null, faults: null },
+    snapshots: SnapshotStore | null;
+  } = { tenants: null, requests: null, faults: null, snapshots: null },
 ) {
   const app = new Hono();
 
@@ -50,6 +57,7 @@ export function createApp(
   );
 
   app.use("*", observabilityMiddleware(platform));
+  app.use("*", adminAuthMiddleware());
 
   app.get("/health", (c) =>
     c.json({
@@ -66,6 +74,7 @@ export function createApp(
       tenants: platform.tenants,
       requests: platform.requests,
       faults: platform.faults,
+      snapshots: platform.snapshots,
     }),
   );
 

@@ -6,5 +6,7 @@ export type { FaultRule } from "./faults.js";
 export { FaultStore, createFaultStore, matchGlob } from "./faults.js";
 export type { TenantSeedDoc } from "./seeds.js";
 export { applyTenantSeed } from "./seeds.js";
+export type { SnapshotMeta, SnapshotPayload } from "./snapshots.js";
+export { SnapshotStore, createSnapshotStore } from "./snapshots.js";
 export { getDb, type Sql } from "./db.js";
 export { migrate } from "./migrate.js";

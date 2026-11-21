@@ -1,3 +1,5 @@
+import { fetchAdmin, API_ORIGIN } from "@/lib/api";
+
 type Tenant = {
   id: string;
   displayName: string;
@@ -5,46 +7,26 @@ type Tenant = {
   createdAt: string;
 };
 
-const API = process.env.NEXT_PUBLIC_API_ORIGIN ?? "https://localhost:8443";
-
-async function loadTenants(): Promise<{ ok: true; tenants: Tenant[] } | { ok: false; message: string }> {
-  try {
-    const res = await fetch(`${API}/admin/v1/tenants`, {
-      cache: "no-store",
-      // Node fetch against local mkcert.
-      // @ts-expect-error Node undici option
-      dispatcher: undefined,
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      return { ok: false, message: `${res.status}: ${body}` };
-    }
-    const json = (await res.json()) as { value: Tenant[] };
-    return { ok: true, tenants: json.value };
-  } catch (err) {
-    return {
-      ok: false,
-      message:
-        err instanceof Error
-          ? `${err.message} (¿API arriba y DATABASE_URL + migrate?)`
-          : String(err),
-    };
-  }
-}
-
 export default async function HomePage() {
-  // Server-side Node may reject mkcert — use insecure agent via env for Stage 0.
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED ??= "0";
-  const result = await loadTenants();
+  const res = await fetchAdmin("/admin/v1/tenants");
+  let tenants: Tenant[] = [];
+  let error: string | null = null;
+  if (res.status === 401) {
+    error = "No autenticado. Andá a /login (admin@local / Password1!).";
+  } else if (!res.ok) {
+    error = `${res.status}: ${await res.text()}`;
+  } else {
+    tenants = ((await res.json()) as { value: Tenant[] }).value;
+  }
 
   return (
     <>
       <h1>Tenants</h1>
       <p className="sub">
-        Cascarón Stage 0 — API <code>{API}</code>
+        Cascarón Stage 0 — API <code>{API_ORIGIN}</code>
       </p>
-      {!result.ok ? (
-        <p className="error">{result.message}</p>
+      {error ? (
+        <p className="error">{error}</p>
       ) : (
         <table>
           <thead>
@@ -55,7 +37,7 @@ export default async function HomePage() {
             </tr>
           </thead>
           <tbody>
-            {result.tenants.map((t) => (
+            {tenants.map((t) => (
               <tr key={t.id}>
                 <td>{t.displayName}</td>
                 <td>{t.defaultDomain ?? "—"}</td>

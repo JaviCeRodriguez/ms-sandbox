@@ -1,3 +1,5 @@
+import { fetchAdmin } from "@/lib/api";
+
 type Fault = {
   id: string;
   pathGlob: string;
@@ -6,22 +8,15 @@ type Fault = {
   retryAfter: number | null;
   oneShot: boolean;
   active: boolean;
-  createdAt: string;
 };
 
-const API = process.env.NEXT_PUBLIC_API_ORIGIN ?? "https://localhost:8443";
-
 export default async function FaultsPage() {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED ??= "0";
+  const res = await fetchAdmin("/admin/v1/faults");
   let rows: Fault[] = [];
   let error: string | null = null;
-  try {
-    const res = await fetch(`${API}/admin/v1/faults`, { cache: "no-store" });
-    if (!res.ok) error = `${res.status}: ${await res.text()}`;
-    else rows = ((await res.json()) as { value: Fault[] }).value;
-  } catch (err) {
-    error = err instanceof Error ? err.message : String(err);
-  }
+  if (res.status === 401) error = "No autenticado. Andá a /login.";
+  else if (!res.ok) error = `${res.status}: ${await res.text()}`;
+  else rows = ((await res.json()) as { value: Fault[] }).value;
 
   return (
     <>

@@ -42,4 +42,12 @@ export async function migrate(databaseUrl?: string): Promise<void> {
       created_at timestamptz not null default now()
     )
   `;
+  await sql`
+    create table if not exists snapshot_metadata (
+      id uuid primary key,
+      name text not null unique,
+      file_path text not null,
+      created_at timestamptz not null default now()
+    )
+  `;
 }
